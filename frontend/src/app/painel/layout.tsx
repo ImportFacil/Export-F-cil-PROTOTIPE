@@ -19,7 +19,7 @@ const MENU: ItemPainel[] = [
     { href: '/painel/cotacao/', rotulo: 'Cotação', oculto: true },
     { href: '/painel/transacoes/', rotulo: 'Transações', papeis: FIN },
   ] },
-  { href: '/painel/importacao', rotulo: 'Importação', icone: 'importacao', filhos: [
+  { href: '/painel/importacao', rotulo: 'Exportação', icone: 'importacao', filhos: [
     { href: '/painel/orcamentos/', rotulo: 'Orçamentos' },
     { href: '/painel/orcamento/', rotulo: 'Orçamento', oculto: true },
     { href: '/painel/ordens/', rotulo: 'Ordens de importação' },
@@ -65,7 +65,6 @@ const MENU: ItemPainel[] = [
     { href: '/painel/locais/', rotulo: 'Locais de estoque' },
     { href: '/painel/paises/', rotulo: 'Países de destino' },
     { href: '/painel/cambio/', rotulo: 'Câmbio' },
-    { href: '/painel/importar/', rotulo: 'Importar produtos' },
     { href: '/painel/auditoria/', rotulo: 'Auditoria', papeis: ADM },
   ] },
 ];
