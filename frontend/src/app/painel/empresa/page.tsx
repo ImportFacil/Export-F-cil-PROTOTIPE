@@ -5,10 +5,10 @@ import { useEu } from '@/components/Shell';
 import { Usuarios } from '@/components/Usuarios';
 import { Aviso, Cabecalho, Campo, Carregando, Situacao } from '@/components/ui';
 import { api } from '@/lib/api';
-import { SITUACAO_CADASTRO, cnpj, reais } from '@/lib/formato';
+import { IDIOMAS, MOEDAS, SITUACAO_CADASTRO, identificacao, reais } from '@/lib/formato';
 import { useAcao, useDados, useParametro } from '@/lib/hooks';
 
-interface Empresa { id: string; cnpj: string; razao_social: string; nome_fantasia: string | null; tipo_cliente: string; situacao: string; conta_e_ordem_liberada: boolean }
+interface Empresa { id: string; cnpj: string | null; pais: string; id_fiscal: string | null; moeda: string; idioma: string; razao_social: string; nome_fantasia: string | null; tipo_cliente: string; situacao: string; conta_e_ordem_liberada: boolean }
 interface Credito {
   cadastro: { situacao: string; faixa: string | null; limite_aprovado_centavos: number };
   cliente_grande: { elegivel: boolean; minimo_mensal_centavos: number; previsto_mensal_centavos: number; media_3_meses_centavos: number; motivos: string[] };
@@ -22,11 +22,12 @@ export default function EmpresaPainel() {
   const { dados: e, erro, setDados } = useDados<Empresa>(id ? `/equipe/empresas/${id}` : null);
   const cred = useDados<Credito>(id ? `/equipe/credito/${id}` : null);
   const tipos = useDados<Array<{ tipo_cliente: string; nome: string }>>('/equipe/tabelas-preco');
-  const [form, setForm] = useState({ razao_social: '', nome_fantasia: '', tipo_cliente: '', situacao: '' });
+  const paises = useDados<Array<{ codigo: string; nome: string }>>('/equipe/paises');
+  const [form, setForm] = useState({ razao_social: '', nome_fantasia: '', tipo_cliente: '', situacao: '', moeda: 'USD', idioma: 'en' });
   const [motivo, setMotivo] = useState('');
   const salvar = useAcao();
   const co = useAcao();
-  useEffect(() => { if (e) setForm({ razao_social: e.razao_social, nome_fantasia: e.nome_fantasia ?? '', tipo_cliente: e.tipo_cliente, situacao: e.situacao }); }, [e]);
+  useEffect(() => { if (e) setForm({ razao_social: e.razao_social, nome_fantasia: e.nome_fantasia ?? '', tipo_cliente: e.tipo_cliente, situacao: e.situacao, moeda: e.moeda, idioma: e.idioma }); }, [e]);
   if (erro) return <Aviso tipo="erro">{erro}</Aviso>;
   if (!e) return <Carregando />;
   const cg = cred.dados?.cliente_grande;
@@ -40,8 +41,8 @@ export default function EmpresaPainel() {
 
   return (
     <>
-      <p className="pequeno"><Link href="/painel/empresas/">‹ Empresas</Link></p>
-      <Cabecalho titulo={e.razao_social} sub={`CNPJ ${cnpj(e.cnpj)}`}>
+      <p className="pequeno"><Link href="/painel/empresas/">‹ Compradores</Link></p>
+      <Cabecalho titulo={e.razao_social} sub={`${paises.dados?.find((p) => p.codigo === e.pais)?.nome ?? e.pais} · ${identificacao(e)}`}>
         <Situacao valor={e.situacao} />
         <Link className="botao secundario" href={`/painel/analise/?empresa=${e.id}`}>Crédito</Link>
         <Link className="botao secundario" href={`/painel/pedidos/?empresa_id=${e.id}`}>Pedidos</Link>
@@ -59,6 +60,14 @@ export default function EmpresaPainel() {
               <select value={form.situacao} disabled={!pode} onChange={(x) => setForm({ ...form, situacao: x.target.value })}>
                 <option value="ativa">Ativa</option><option value="bloqueada">Bloqueada (sem novos pedidos)</option><option value="inativa">Inativa (sem acesso)</option>
               </select>
+            </Campo>
+          </div>
+          <div className="grade grade-2">
+            <Campo rotulo="Moeda de venda">
+              <select value={form.moeda} disabled={!pode} onChange={(x) => setForm({ ...form, moeda: x.target.value })}>{Object.entries(MOEDAS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+            </Campo>
+            <Campo rotulo="Idioma da loja e dos documentos">
+              <select value={form.idioma} disabled={!pode} onChange={(x) => setForm({ ...form, idioma: x.target.value })}>{Object.entries(IDIOMAS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
             </Campo>
           </div>
           <Aviso tipo="erro">{salvar.erro}</Aviso>

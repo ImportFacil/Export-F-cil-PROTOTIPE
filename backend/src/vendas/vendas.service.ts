@@ -63,7 +63,7 @@ export class VendasService {
       ]);
       const tributos = calcularTributos(regras, itens, p.total_centavos, destino.uf?.toUpperCase() ?? null);
       const nota = await trx.insertInto('notas_fiscais')
-        .values({ pedido_id: pedidoId, numero, chave: chaveSimulada(numero, p.cnpj), valor_centavos: p.total_centavos, emitida_por: autor.id,
+        .values({ pedido_id: pedidoId, numero, chave: chaveSimulada(numero, p.cnpj ?? ''), valor_centavos: p.total_centavos, emitida_por: autor.id,
           tributos_centavos: tributos.total_centavos, tributos: JSON.stringify({ ...tributos, uf: destino.uf }) })
         .returningAll().executeTakeFirstOrThrow();
       await trx.insertInto('pedido_eventos').values({ pedido_id: pedidoId, tipo: 'nota_fiscal', usuario_id: autor.id, descricao: `Nota fiscal nº ${numero} emitida.` }).execute();

@@ -13,7 +13,7 @@ import { PainelLayout, type ItemPainel } from './painel/PainelLayout';
 
 export interface Eu {
   usuario: { id: string; origem: Origem; papel: string; nome: string; email: string };
-  empresa: null | { id: string; razao_social: string; tipo_cliente: string; situacao: string; conta_e_ordem_liberada: boolean; cnpj: string };
+  empresa: null | { id: string; razao_social: string; tipo_cliente: string; situacao: string; conta_e_ordem_liberada: boolean; cnpj: string | null; pais: string; id_fiscal: string | null; moeda: string; idioma: string };
 }
 
 const EuContexto = createContext<{ eu: Eu; recarregar: () => Promise<void> } | null>(null);

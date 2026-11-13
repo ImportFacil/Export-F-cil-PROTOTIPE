@@ -5,6 +5,7 @@ import type { UsuarioAutenticado } from '../auth/identidade';
 import { BANCO, type Banco } from '../banco/banco.module';
 import type { Endereco } from '../banco/tipos';
 import { CatalogoService } from '../catalogo/catalogo.service';
+import { conferirEndereco } from '../comum/endereco';
 
 /** A loja no formato do Bagisto: favoritos, endereços de entrega e listas de compra da empresa. */
 @Injectable()
@@ -52,12 +53,17 @@ export class LojaService {
       .where('empresa_id', '=', u.empresaId!).where('ativo', '=', true).orderBy('padrao', 'desc').orderBy('apelido').execute();
   }
 
+  private async paisDaEmpresa(empresaId: string) {
+    return (await this.db.selectFrom('empresas').select('pais').where('id', '=', empresaId).executeTakeFirstOrThrow()).pais;
+  }
+
   async criarEndereco(u: UsuarioAutenticado, d: { apelido: string; endereco: Endereco; padrao?: boolean }, ip: string | null) {
     return this.db.transaction().execute(async (trx) => {
+      const endereco = conferirEndereco(await this.paisDaEmpresa(u.empresaId!), d.endereco);
       const existe = await trx.selectFrom('enderecos_entrega').select('id').where('empresa_id', '=', u.empresaId!).where('ativo', '=', true).executeTakeFirst();
       const padrao = d.padrao || !existe; // o primeiro endereço já vira o padrão
       if (padrao) await trx.updateTable('enderecos_entrega').set({ padrao: false }).where('empresa_id', '=', u.empresaId!).where('padrao', '=', true).execute();
-      const e = await trx.insertInto('enderecos_entrega').values({ empresa_id: u.empresaId!, apelido: d.apelido, endereco: JSON.stringify(d.endereco), padrao, criado_por: u.id })
+      const e = await trx.insertInto('enderecos_entrega').values({ empresa_id: u.empresaId!, apelido: d.apelido, endereco: JSON.stringify(endereco), padrao, criado_por: u.id })
         .returningAll().executeTakeFirstOrThrow();
       await this.auditoria.registrar({ usuario: u, acao: 'endereco.criar', entidade: 'empresa', entidadeId: u.empresaId!, depois: e, ip }, trx);
       return e;
@@ -68,10 +74,11 @@ export class LojaService {
     return this.db.transaction().execute(async (trx) => {
       const antes = await trx.selectFrom('enderecos_entrega').selectAll().where('id', '=', id).where('empresa_id', '=', u.empresaId!).forUpdate().executeTakeFirst();
       if (!antes || !antes.ativo) throw new NotFoundException('Endereço não encontrado.');
+      const endereco = d.endereco ? conferirEndereco(await this.paisDaEmpresa(u.empresaId!), d.endereco) : undefined;
       if (d.ativo === false && antes.padrao) throw new BadRequestException('Escolha outro endereço como padrão antes de tirar este.');
       if (d.padrao) await trx.updateTable('enderecos_entrega').set({ padrao: false }).where('empresa_id', '=', u.empresaId!).where('id', '<>', id).where('padrao', '=', true).execute();
       const e = await trx.updateTable('enderecos_entrega').set({
-        ...(d.apelido !== undefined && { apelido: d.apelido }), ...(d.endereco && { endereco: JSON.stringify(d.endereco) }),
+        ...(d.apelido !== undefined && { apelido: d.apelido }), ...(endereco && { endereco: JSON.stringify(endereco) }),
         ...(d.padrao !== undefined && { padrao: d.padrao }), ...(d.ativo !== undefined && { ativo: d.ativo }),
       }).where('id', '=', id).returningAll().executeTakeFirstOrThrow();
       await this.auditoria.registrar({ usuario: u, acao: 'endereco.alterar', entidade: 'empresa', entidadeId: u.empresaId!, antes, depois: e, ip }, trx);

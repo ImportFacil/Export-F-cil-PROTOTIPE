@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Ip, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { SoCliente, SoEquipe, UsuarioAtual } from '../auth/decoradores';
+import { Publico, SoCliente, SoEquipe, UsuarioAtual } from '../auth/decoradores';
 import type { UsuarioAutenticado } from '../auth/identidade';
 import {
-  AlterarEmpresaDto, AlterarUsuarioClienteDto, AlterarUsuarioEquipeDto, CriarEmpresaDto, FiltroEmpresas,
+  AlterarEmpresaDto, AlterarPaisDto, AlterarUsuarioClienteDto, AlterarUsuarioEquipeDto, CriarEmpresaDto, FiltroEmpresas,
   NovoUsuarioClienteDto, NovoUsuarioEquipeDto,
 } from './dto';
 import { EmpresasService } from './empresas.service';
@@ -56,6 +56,35 @@ export class EmpresaClienteController {
   @SoCliente('aprovador')
   alterarUsuario(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', ParseUUIDPipe) id: string, @Body() dto: AlterarUsuarioClienteDto, @Ip() ip: string) {
     return this.usuarios.alterar(id, dto, u, ip, { origem: 'cliente', empresaId: u.empresaId! });
+  }
+}
+
+@ApiTags('Países de destino')
+@Controller()
+export class PaisesController {
+  constructor(private readonly empresas: EmpresasService) {}
+
+  @Get('paises')
+  @Publico()
+  @ApiOperation({ summary: 'Países de destino ativos (para o cadastro do comprador e a loja)' })
+  ativos() {
+    return this.empresas.paises(true);
+  }
+
+  @Get('equipe/paises')
+  @ApiBearerAuth()
+  @SoEquipe()
+  @ApiOperation({ summary: 'Todos os países, por bloco, com moeda e idioma padrão' })
+  todos() {
+    return this.empresas.paises();
+  }
+
+  @Patch('equipe/paises/:codigo')
+  @ApiBearerAuth()
+  @SoEquipe('administrador')
+  @ApiOperation({ summary: 'Ativa ou desativa um país de destino e ajusta a moeda e o idioma padrão' })
+  alterar(@UsuarioAtual() u: UsuarioAutenticado, @Param('codigo') codigo: string, @Body() dto: AlterarPaisDto, @Ip() ip: string) {
+    return this.empresas.alterarPais(codigo, dto, u, ip);
   }
 }
 

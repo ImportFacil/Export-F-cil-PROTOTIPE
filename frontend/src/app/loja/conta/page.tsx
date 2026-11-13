@@ -3,7 +3,7 @@ import { LimitesDeCompra } from '@/components/LimitesDeCompra';
 import { useEu } from '@/components/Shell';
 import { Usuarios } from '@/components/Usuarios';
 import { Cabecalho, Situacao } from '@/components/ui';
-import { NOMES_TIPO, PAPEL, cnpj } from '@/lib/formato';
+import { NOMES_TIPO, PAPEL, identificacao } from '@/lib/formato';
 
 export default function Conta() {
   const { eu } = useEu();
@@ -16,7 +16,7 @@ export default function Conta() {
         <div className="cartao pilha">
           <h2>Empresa</h2>
           <div><b>{e.razao_social}</b></div>
-          <div className="muted">CNPJ {cnpj(e.cnpj)} · {NOMES_TIPO[e.tipo_cliente] ?? e.tipo_cliente}</div>
+          <div className="muted">{identificacao(e)} · {NOMES_TIPO[e.tipo_cliente] ?? e.tipo_cliente}</div>
           <div className="linha"><Situacao valor={e.situacao} /> {e.conta_e_ordem_liberada && <Situacao valor="aprovado" nomes={{ aprovado: 'Conta e ordem liberada' }} />}</div>
         </div>
         <div className="cartao pilha">

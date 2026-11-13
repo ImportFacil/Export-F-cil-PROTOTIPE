@@ -49,9 +49,31 @@ export interface TabelasPrecoTabela {
   atualizado_em: Generated<Momento>;
 }
 
+export type Moeda = 'USD' | 'EUR';
+export type Idioma = 'pt' | 'en' | 'es';
+export const MOEDAS: Moeda[] = ['USD', 'EUR'];
+export const IDIOMAS: Idioma[] = ['pt', 'en', 'es'];
+
+export interface PaisesTabela {
+  codigo: string;
+  nome: string;
+  nome_en: string;
+  nome_es: string;
+  bloco: string;
+  moeda: Moeda;
+  idioma: Idioma;
+  ativo: Generated<boolean>;
+  ordem: Generated<number>;
+}
+
 export interface EmpresasTabela {
   id: Generated<string>;
-  cnpj: string;
+  /** Só para empresas do Brasil; o comprador estrangeiro usa pais + id_fiscal. */
+  cnpj: string | null;
+  pais: Generated<string>;
+  id_fiscal: string | null;
+  moeda: Generated<Moeda>;
+  idioma: Generated<Idioma>;
   razao_social: string;
   nome_fantasia: string | null;
   tipo_cliente: string;
@@ -672,6 +694,7 @@ export interface CotacaoItensTabela {
 export interface Database {
   tabelas_preco: TabelasPrecoTabela;
   empresas: EmpresasTabela;
+  paises: PaisesTabela;
   usuarios: UsuariosTabela;
   categorias: CategoriasTabela;
   produtos: ProdutosTabela;

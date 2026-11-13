@@ -33,7 +33,7 @@ export default function AnaliseCredito() {
   return (
     <>
       <p className="pequeno"><Link href="/painel/credito/">‹ Crédito</Link></p>
-      <Cabecalho titulo={d.empresa.razao_social} sub={`CNPJ ${cnpj(d.empresa.cnpj)} · ${NOMES_TIPO[d.empresa.tipo_cliente] ?? d.empresa.tipo_cliente}`}>
+      <Cabecalho titulo={d.empresa.razao_social} sub={`${cnpj(d.empresa.cnpj) ? `CNPJ ${cnpj(d.empresa.cnpj)} · ` : ''}${NOMES_TIPO[d.empresa.tipo_cliente] ?? d.empresa.tipo_cliente}`}>
         <Situacao valor={c.situacao} nomes={SITUACAO_CADASTRO} />
         <Link className="botao secundario" href={`/painel/empresa/?id=${d.empresa.id}`}>Empresa</Link>
       </Cabecalho>

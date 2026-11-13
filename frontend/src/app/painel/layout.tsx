@@ -40,7 +40,7 @@ const MENU: ItemPainel[] = [
   ] },
   { href: '/painel/relatorios/', rotulo: 'Relatórios', icone: 'relatorios' },
   { href: '/painel/clientes', rotulo: 'Clientes', icone: 'clientes', filhos: [
-    { href: '/painel/empresas/', rotulo: 'Empresas' },
+    { href: '/painel/empresas/', rotulo: 'Compradores' },
     { href: '/painel/empresa/', rotulo: 'Empresa', oculto: true },
     { href: '/painel/analise/', rotulo: 'Análise de crédito', oculto: true },
     { href: '/painel/usuarios/', rotulo: 'Usuários' },
@@ -63,6 +63,7 @@ const MENU: ItemPainel[] = [
     { href: '/painel/permissoes/', rotulo: 'Papéis e permissões', papeis: ADM },
     { href: '/painel/impostos/', rotulo: 'Impostos' },
     { href: '/painel/locais/', rotulo: 'Locais de estoque' },
+    { href: '/painel/paises/', rotulo: 'Países de destino' },
     { href: '/painel/cambio/', rotulo: 'Câmbio' },
     { href: '/painel/importar/', rotulo: 'Importar produtos' },
     { href: '/painel/auditoria/', rotulo: 'Auditoria', papeis: ADM },

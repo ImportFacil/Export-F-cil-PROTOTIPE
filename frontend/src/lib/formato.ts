@@ -26,9 +26,21 @@ export function dataHora(iso: string | null | undefined) {
   return iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 }
 
-export function cnpj(v: string) {
-  return v?.length === 14 ? `${v.slice(0, 2)}.${v.slice(2, 5)}.${v.slice(5, 8)}/${v.slice(8, 12)}-${v.slice(12)}` : v;
+export function cnpj(v: string | null | undefined) {
+  return v?.length === 14 && /^[0-9A-Z]{12}\d{2}$/.test(v) ? `${v.slice(0, 2)}.${v.slice(2, 5)}.${v.slice(5, 8)}/${v.slice(8, 12)}-${v.slice(12)}` : (v ?? '');
 }
+
+/** Identificação do comprador: CNPJ (Brasil) ou a identificação fiscal do país dele, com o código do país. */
+export function identificacao(e: { cnpj: string | null; pais?: string; id_fiscal?: string | null }) {
+  return e.cnpj ? `CNPJ ${cnpj(e.cnpj)}` : `${e.pais ?? ''} ${e.id_fiscal ?? ''}`.trim();
+}
+
+export const BLOCOS: Record<string, string> = {
+  brasil: 'Brasil', mercosul: 'Mercosul', associado_mercosul: 'Associados do Mercosul', america_norte: 'América do Norte',
+  uniao_europeia: 'União Europeia', europa: 'Europa (fora da UE)', asia: 'Ásia', africa: 'África',
+};
+export const IDIOMAS: Record<string, string> = { pt: 'Português', en: 'Inglês', es: 'Espanhol' };
+export const MOEDAS: Record<string, string> = { USD: 'Dólar (US$)', EUR: 'Euro (€)' };
 
 export const pct = (bp: number) => `${(bp / 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`;
 

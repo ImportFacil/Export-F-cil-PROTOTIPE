@@ -424,6 +424,20 @@ async function principal(): Promise<void> {
     await chamar('POST', '/orcamentos', hosp.email, 'cliente', { modalidade: 'encomenda', itens: [{ descricao: 'Monitor multiparamétrico', quantidade: 10 }] });
 
     const tot = await db.selectFrom('pedidos').select([sql<number>`count(*)::int`.as('n'), sql<number>`coalesce(sum(total_centavos),0)::bigint`.as('v')]).executeTakeFirstOrThrow();
+    // Exportação: na demonstração, os compradores são empresas de fora do Brasil (país, identificação fiscal, moeda e idioma)
+    const ESTRANGEIROS: Array<[string, string, string, string, string, 'USD' | 'EUR', 'pt' | 'en' | 'es']> = [
+      ['compras@coop-demo.com.br', 'Agrosur Distribuidora S.A.', 'Agrosur', 'AR', '30-71234567-8', 'USD', 'es'],
+      ['compras@distribuidora-demo.com.br', 'Northgate Tools Distribution LLC', 'Northgate Tools', 'US', '12-3456789', 'USD', 'en'],
+      ['compras@revenda-demo.com.br', 'Ferretería Andina SpA', 'Ferretería Andina', 'CL', '76.123.456-7', 'USD', 'es'],
+      ['compras@construtora-demo.com.br', 'Rheinland Bau & Technik GmbH', 'Rheinland Bau', 'DE', 'DE123456789', 'EUR', 'en'],
+      ['compras@hospital-demo.com.br', 'Shenzhen Harbor Trading Co., Ltd.', 'Harbor Trading', 'CN', '91440300MA5F3K2X1B', 'USD', 'en'],
+    ];
+    for (const [email, razao, fantasia, pais, idFiscal, moeda, idioma] of ESTRANGEIROS) {
+      const u = await db.selectFrom('usuarios').select('empresa_id').where('email', '=', email).where('origem', '=', 'cliente').executeTakeFirst();
+      if (!u?.empresa_id) continue;
+      await db.updateTable('empresas').set({ razao_social: razao, nome_fantasia: fantasia, pais, cnpj: null, id_fiscal: idFiscal, moeda, idioma, endereco: null })
+        .where('id', '=', u.empresa_id).execute();
+    }
     console.log(`Movimento de demonstração: ${criados} pedidos em ${DIAS} dias (R$ ${(Number(tot.v) / 100).toLocaleString('pt-BR')}), ${atrasadas} parcela(s) em atraso, 3 orçamentos de importação, notas, envios, 2 reembolsos, ${avaliadas} avaliações e ${inscritos.length} inscritos na newsletter.`);
   } finally {
     await app.close();

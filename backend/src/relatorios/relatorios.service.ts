@@ -93,7 +93,7 @@ export class RelatoriosService {
   async clientes(de?: string, ate?: string) {
     const p = lerPeriodo(de, ate);
     const r = await sql<{ empresa_id: string; razao_social: string; cnpj: string; tipo_cliente: string; situacao: string; pedidos: number; vendas: string; ultimo_pedido: string | null; primeiro_pedido: string | null; criada_em: string }>`
-      SELECT e.id AS empresa_id, e.razao_social, e.cnpj, e.tipo_cliente, e.situacao, e.criado_em AS criada_em,
+      SELECT e.id AS empresa_id, e.razao_social, coalesce(e.cnpj, e.pais || ' ' || e.id_fiscal) AS cnpj, e.tipo_cliente, e.situacao, e.criado_em AS criada_em,
              count(p.id) FILTER (WHERE ${DATA} BETWEEN ${p.de}::date AND ${p.ate}::date)::int AS pedidos,
              coalesce(sum(p.total_centavos) FILTER (WHERE ${DATA} BETWEEN ${p.de}::date AND ${p.ate}::date), 0)::bigint AS vendas,
              max(p.criado_em) AS ultimo_pedido, min(p.criado_em) AS primeiro_pedido
@@ -126,7 +126,7 @@ export class RelatoriosService {
     const j = this.janela(f);
     const hoje = hojeBrasil();
     const r = await sql<LinhaPedido>`
-      SELECT p.id, p.criado_em, p.empresa_id, e.razao_social, e.cnpj, p.tipo_cliente, u.nome AS comprador, p.situacao, p.situacao_pagamento,
+      SELECT p.id, p.criado_em, p.empresa_id, e.razao_social, coalesce(e.cnpj, e.pais || ' ' || e.id_fiscal) AS cnpj, p.tipo_cliente, u.nome AS comprador, p.situacao, p.situacao_pagamento,
              p.forma_pagamento, p.parcelas, p.ordem_compra, p.cupom, p.cotacao_id,
              p.subtotal_centavos, p.promocao_centavos, p.desconto_centavos, p.juros_centavos, p.total_centavos,
              coalesce(fin.pago, 0)::bigint AS pago_centavos, coalesce(fin.aberto, 0)::bigint AS aberto_centavos,
@@ -216,7 +216,7 @@ export class RelatoriosService {
         SELECT empresa_id, sum(total_centavos) AS valor FROM pedidos
         WHERE forma_pagamento = 'boleto' AND situacao_pagamento = 'aguardando_faturamento' AND situacao <> 'cancelado' GROUP BY 1
       )
-      SELECT e.id AS empresa_id, e.razao_social, e.cnpj, e.tipo_cliente, e.situacao AS situacao_empresa, cc.faixa,
+      SELECT e.id AS empresa_id, e.razao_social, coalesce(e.cnpj, e.pais || ' ' || e.id_fiscal) AS cnpj, e.tipo_cliente, e.situacao AS situacao_empresa, cc.faixa,
              CASE WHEN cc.situacao = 'aprovado' THEN cc.limite_aprovado_centavos ELSE 0 END AS limite_centavos,
              coalesce(vend.pedidos, 0)::int AS pedidos, coalesce(vend.valor, 0)::bigint AS vendas_centavos,
              coalesce(receb.valor, 0)::bigint AS recebido_centavos, coalesce(receb.n, 0)::int AS pagamentos,
